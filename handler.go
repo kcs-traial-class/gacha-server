@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"gacha-api/models"
 	"image"
 	"log"
 	"net/http"
@@ -17,7 +18,7 @@ import (
 
 // ガチャ.
 func gachaHandler(c *gin.Context) {
-	var req GachaRequest
+	var req models.GachaRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
@@ -34,7 +35,7 @@ func gachaHandler(c *gin.Context) {
 		return
 	}
 
-	results := []Item{}
+	results := []models.Item{}
 	for i := 0; i < req.Times; i++ {
 		item := drawItem(items)
 		if item != nil {
@@ -42,7 +43,7 @@ func gachaHandler(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, GachaResponse{Results: results})
+	c.JSON(http.StatusOK, models.GachaResponse{Results: results})
 }
 
 // アイテムリスト.
@@ -57,7 +58,7 @@ func getItemListHandler(c *gin.Context) {
 
 // アイテム作成.
 func createItemHandler(c *gin.Context) {
-	var newItem Item
+	var newItem models.Item
 	newItem.Name = c.PostForm("name")
 	newItem.Rarity = c.PostForm("rarity")
 	newItem.Details = c.PostForm("details")
@@ -125,7 +126,7 @@ func updateItemHandler(c *gin.Context) {
 		return
 	}
 
-	var updatedItem Item
+	var updatedItem models.Item
 	updatedItem.ID = itemID
 	updatedItem.Name = c.PostForm("name")
 	updatedItem.Rarity = c.PostForm("rarity")
@@ -211,16 +212,16 @@ func deleteItemHandler(c *gin.Context) {
 }
 
 // アイテム情報をすべて取得する.
-func getAllItemsFromDB() ([]Item, error) {
+func getAllItemsFromDB() ([]models.Item, error) {
 	rows, err := db.Query("SELECT id, name, rarity, details, percentage, image_identifier FROM items")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var items []Item
+	var items []models.Item
 	for rows.Next() {
-		var item Item
+		var item models.Item
 		if err := rows.Scan(&item.ID, &item.Name, &item.Rarity, &item.Details, &item.Percentage, &item.ImageIdentifier); err != nil {
 			return nil, err
 		}
@@ -257,7 +258,7 @@ func getImageHandler(c *gin.Context) {
 }
 
 // アイテム抽選.
-func drawItem(items []Item) *Item {
+func drawItem(items []models.Item) *models.Item {
 	totalWeight := 0.0
 	for _, item := range items {
 		totalWeight += item.Percentage
