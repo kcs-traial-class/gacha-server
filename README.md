@@ -1,1 +1,1 @@
-# gacha-client
+# gacha-server
